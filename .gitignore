@@ -2,6 +2,8 @@
 
 # dependencies
 node_modules/
+*.rar
+*.zip
 
 # Expo
 .expo/
