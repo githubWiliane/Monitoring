@@ -1,71 +1,72 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, Animated } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
+import axios from 'axios';
 
 const HumiditeAirScreen = () => {
-  const [isRegulatorOn, setIsRegulatorOn] = useState(false);
-  const [oxygenLevel, setOxygenLevel] = useState(2); // Valeur initiale d'OD
-  const backgroundColorAnim = new Animated.Value(0); // Valeur initiale pour l'animation
+  const [humidite, setHumidite] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const toggleSwitch = () => setIsRegulatorOn((previousState) => !previousState);
+  // Adresse IP locale de l'ESP32
+  const ESP32_IP = "http://192.168.4.1"; // Assurez-vous que l'adresse est correcte
 
-  // Déterminer la couleur de la jauge en fonction de l'OD
-  const getGaugeColorForOxygenLevel = (level) => {
-    if (level < 3) return '#FF6666'; // Rouge pour OD < 3
-    if (level >= 3 && level < 5) return '#FFD700'; // Jaune pour OD entre 3 et 5
-    if (level >= 5 && level <= 10) return '#90EE90'; // Vert pour OD entre 5 et 10
-    return '#87CEEB'; // Bleu pour OD > 10
+  // Fonction pour récupérer les données depuis l'ESP32
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(`${ESP32_IP}`);
+      setHumidite(response.data.humidity); // Assurez-vous que le champ de réponse est correct
+      setLoading(false);
+    } catch (err) {
+      setError("Impossible de récupérer les données.");
+      setLoading(false);
+    }
   };
 
-  // Effet pour mettre à jour l'animation de l'arrière-plan à chaque changement d'OD
   useEffect(() => {
-    Animated.timing(backgroundColorAnim, {
-      toValue: oxygenLevel, // Utiliser l'OD comme valeur pour l'animation
-      duration: 1000, // Durée de la transition en millisecondes
-      useNativeDriver: false,
-    }).start();
-  }, [oxygenLevel]);
-
-  // Calculer la couleur de fond en fonction de l'OD avec une transition progressive
-  const animatedBackgroundColor = backgroundColorAnim.interpolate({
-    inputRange: [0, 3, 5, 10, 15],
-    outputRange: ['#660000', '#8B4500', '#556B2F', '#004d00', '#4682B4'], // Rouge foncé, jaune foncé, vert foncé, bleu pour chaque intervalle
-  });
-
-  // Calculer la largeur de la jauge en fonction de l'OD
-  const getGaugeWidth = (level) => {
-    const minLevel = 0;
-    const maxLevel = 15;
-    const normalizedLevel = Math.max(minLevel, Math.min(level, maxLevel));
-    const percentage = (normalizedLevel / maxLevel) * 100;
-    return `${percentage}%`;
-  };
+    fetchData();
+    const interval = setInterval(fetchData, 2000); // Rafraîchir les données toutes les 2 secondes
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <Animated.View style={[styles.container, { backgroundColor: animatedBackgroundColor }]}>
-      {/* Icône locale */}
+    <View style={styles.container}>
+      {/* Icône de l'humidité */}
       <Image
-        source={require('../HumiditeAir/Humidité.png')} // Ajuster le chemin de l'icône
+        source={require('../HumiditeAir/Humidité.png')} // Ajustez le chemin de l'image
         style={styles.icon}
         resizeMode="contain"
       />
 
-      <Text style={styles.label}>Humidité de l'air</Text>
-
-      {/* Jauge avec couleur et largeur dynamique */}
-      <View style={styles.gaugeContainer}>
-        <View
-          style={[
-            styles.gauge,
-            {
-              backgroundColor: getGaugeColorForOxygenLevel(oxygenLevel),
-              width: getGaugeWidth(oxygenLevel), // Ajuster la largeur selon l'OD
-            },
-          ]}
-        />
-      </View>
-
-      <Text style={styles.value}>{oxygenLevel} %</Text>
-    </Animated.View>
+      {loading ? (
+        <>
+          <ActivityIndicator size="large" color="#1E90FF" style={styles.spinner} />
+          <Text style={styles.loadingText}>Chargement des données...</Text>
+        </>
+      ) : error ? (
+        <Text style={styles.error}>{error}</Text>
+      ) : (
+        <>
+          <Text style={styles.label}>Humidité de l'air</Text>
+          <View style={styles.gaugeContainer}>
+            <View
+              style={[
+                styles.gauge,
+                {
+                  width: `${Math.min(Math.max(humidite, 0), 100)}%`, // Normalisation entre 0 et 100%
+                },
+              ]}
+            />
+          </View>
+          <Text style={styles.value}>{humidite} %</Text>
+        </>
+      )}
+    </View>
   );
 };
 
@@ -74,13 +75,21 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#1A1A2E', // Bleu marine sombre
+  },
+  spinner: {
+    marginBottom: 20,
+  },
+  loadingText: {
+    marginTop: 20,
+    fontSize: 16,
+    color: 'white',
   },
   icon: {
-    width: 170,
+    width: 130,
     height: 200,
     marginBottom: 20,
-    tintColor: 'white',
-    
+    tintColor: "white",
   },
   label: {
     fontSize: 24,
@@ -89,7 +98,7 @@ const styles = StyleSheet.create({
   gaugeContainer: {
     width: 200,
     height: 10,
-    backgroundColor: '#ccc',
+    backgroundColor: 'black', // Couleur de base de la jauge
     borderRadius: 5,
     overflow: 'hidden',
     marginVertical: 20,
@@ -97,20 +106,17 @@ const styles = StyleSheet.create({
   gauge: {
     height: '100%',
     borderRadius: 5,
+    backgroundColor: 'turquoise', // Vert clair pour indiquer la progression
   },
   value: {
     fontSize: 48,
     color: 'white',
   },
-  switchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  regulatorLabel: {
-    fontSize: 18,
-    color: 'white',
-    marginRight: 10,
+  error: {
+    color: 'red',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 10,
   },
 });
 

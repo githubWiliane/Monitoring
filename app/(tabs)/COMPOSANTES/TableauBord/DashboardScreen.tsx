@@ -1,18 +1,46 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import axios from 'axios';
 
 const DashboardScreen = ({ navigation }) => {
+  const [temperature, setTemperature] = useState(null);
+  const [humidity, setHumidity] = useState(null);
+
+  // Adresse IP de l'ESP32 (point d'accès)
+  const ESP32_IP = "http://192.168.4.1";
+
+  // Fonction pour récupérer les données de l'ESP32
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(ESP32_IP);
+      setTemperature(response.data.temperature);
+      setHumidity(response.data.humidity);
+    } catch (err) {
+      console.error("Erreur lors de la récupération des données : ", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 2000); // Mise à jour toutes les 2 secondes
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>TABLEAU DE BORD</Text>
-      
+
       <TouchableOpacity 
         style={styles.item} 
         onPress={() => navigation.navigate('Temperature')}
       >
         <View style={styles.row}>
-          <Text style={styles.boldText}>Température de l'eau <Text style={styles.value}>20°C</Text></Text>
-          <Text style={styles.arrow}> {'>'}</Text>
+          <Text style={styles.boldText}>
+            Température de l'eau
+          </Text>
+          <Text style={styles.value}>
+            {temperature !== null ? `${temperature} °C` : <ActivityIndicator size="small" color="#00f" />}
+          </Text>
         </View>
       </TouchableOpacity>
 
@@ -81,9 +109,16 @@ const DashboardScreen = ({ navigation }) => {
         onPress={() => navigation.navigate('TempératureAir')}
       >
         <View style={styles.row}>
-          <Text style={styles.boldText}>Température de l'air <Text style={styles.value}>25°C</Text></Text>
-          <Text style={styles.arrow}> {'>'}</Text>
+          <Text style={styles.boldText}>
+            Température de l'air
+          </Text>
+          <View style={styles.dataContainer}>
+            <Text style={styles.value}>
+              {temperature !== null ? `${temperature} °C` : <ActivityIndicator size="small" color="#00f" />}
+            </Text>
+          </View>
         </View>
+        <Text style={styles.arrowNew}> {'>'}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity 
@@ -91,9 +126,16 @@ const DashboardScreen = ({ navigation }) => {
         onPress={() => navigation.navigate('Humidité')}
       >
         <View style={styles.row}>
-          <Text style={styles.boldText}>Humidité de l'air <Text style={styles.value}>60%</Text></Text>
-          <Text style={styles.arrow}> {'>'}</Text>
+          <Text style={styles.boldText}>
+            Humidité de l'air
+          </Text>
+          <View style={styles.dataContainer}>
+            <Text style={styles.value}>
+              {humidity !== null ? `${humidity} %` : <ActivityIndicator size="small" color="#00f" />}
+            </Text>
+          </View>
         </View>
+        <Text style={styles.arrowNew}> {'>'}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -140,6 +182,18 @@ const styles = StyleSheet.create({
   arrow: {
     fontSize: 16,
     color: '#fff',
+  },
+  arrowNew: {
+    fontSize: 16,
+    color: '#fff',
+    marginLeft:"-15",
+  },
+  dataContainer: {
+    marginLeft: 10,
+    marginRight:"40",
+  },
+  spinner: {
+    marginLeft: 10,
   },
 });
 
