@@ -1,200 +1,180 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
-import axios from 'axios';
+import React from 'react';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import CircularProgress from 'react-native-circular-progress-indicator';
 
-const DashboardScreen = ({ navigation }) => {
-  const [temperature, setTemperature] = useState(null);
-  const [humidity, setHumidity] = useState(null);
-
-  // Adresse IP de l'ESP32 (point d'accès)
-  const ESP32_IP = "http://192.168.4.1";
-
-  // Fonction pour récupérer les données de l'ESP32
-  const fetchData = async () => {
-    try {
-      const response = await axios.get(ESP32_IP);
-      setTemperature(response.data.temperature);
-      setHumidity(response.data.humidity);
-    } catch (err) {
-      console.error("Erreur lors de la récupération des données : ", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 2000); // Mise à jour toutes les 2 secondes
-    return () => clearInterval(interval);
-  }, []);
-
+export default function TableauDebord({ navigation }) {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>TABLEAU DE BORD</Text>
+      {/* En-tête */}
+      <View style={styles.header}>
+        <Text style={styles.headerText}>TABLEAU DE BORD</Text>
+      </View>
 
-      <TouchableOpacity 
-        style={styles.item} 
-        onPress={() => navigation.navigate('Temperature')}
-      >
-        <View style={styles.row}>
-          <Text style={styles.boldText}>
-            Température de l'eau
-          </Text>
-          <Text style={styles.value}>
-            {temperature !== null ? `${temperature} °C` : <ActivityIndicator size="small" color="#00f" />}
-          </Text>
-        </View>
-      </TouchableOpacity>
+      {/* Paramètres */}
+      <View style={styles.grid}>
+        <View style={styles.parameter}>
+        <CircularProgress
+  value={100}
+  radius={70}
+  progressValueColor={'#fff'}
+  duration={10000}
+  strokeColorConfig={[
+    { color: 'red', value: 0 },
+    { color: 'skyblue', value: 50 },
+    { color: 'yellowgreen', value: 100 },
+  ]}
+  valueSuffix={'°C'} // Ajout de l'unité
+  progressValueStyle={{ fontSize: 26 }}
+/>
 
-      <TouchableOpacity 
-        style={styles.item} 
-        onPress={() => navigation.navigate('PH')}
-      >
-        <View style={styles.row}>
-          <Text style={styles.boldText}>pH <Text style={styles.value}>12</Text></Text>
-          <Text style={styles.arrow}> {'>'}</Text>
+          <Text style={styles.label}>T° de l'Eau</Text>
         </View>
-      </TouchableOpacity>
+        <View style={styles.parameter}>
+        <CircularProgress
+  value={100}
+  radius={70}
+  progressValueColor={'#fff'}
+  duration={10000}
+  strokeColorConfig={[
+    { color: 'red', value: 0 },
+    { color: 'skyblue', value: 50 },
+    { color: 'yellowgreen', value: 100 },
+  ]}
+  valueSuffix={'°C'} // Ajout de l'unité
+  progressValueStyle={{ fontSize: 26 }}
+/>
 
-      <TouchableOpacity 
-        style={styles.item} 
-        onPress={() => navigation.navigate('Salinité')}
-      >
-        <View style={styles.row}>
-          <Text style={styles.boldText}>Salinité <Text style={styles.value}>20g/l</Text></Text>
-          <Text style={styles.arrow}> {'>'}</Text>
+          <Text style={styles.label}>T° de l'Air</Text>
         </View>
-      </TouchableOpacity>
+        <View style={styles.parameter}>
+          <CircularProgress
+            value={100}
+            radius={70}
+            progressValueColor={'#fff'}
+            duration={10000}
+            strokeColorConfig={[
+              { color: 'red', value: 0 },
+              { color: 'skyblue', value: 50 },
+              { color: 'yellowgreen', value: 100 },
+            ]}
+            progressValueStyle={{ fontSize: 26 }}
+          />
+          <Text style={styles.label}>Humidité (Air)</Text>
+        </View>
+        <View style={styles.parameter}>
+        <CircularProgress
+  value={100}
+  radius={70}
+  progressValueColor={'#fff'}
+  duration={10000}
+  strokeColorConfig={[
+    { color: 'red', value: 0 },
+    { color: 'skyblue', value: 50 },
+    { color: 'yellowgreen', value: 100 },
+  ]}
+  valueSuffix={'Atm'} // Ajout de l'unité
+  progressValueStyle={{ fontSize: 26 }}
+/>
 
-      <TouchableOpacity 
-        style={styles.item} 
-        onPress={() => navigation.navigate('Oxygen')}
-      >
-        <View style={styles.row}>
-          <Text style={styles.boldText}>Oxygène Dissous (OD) <Text style={styles.value}>2mg/L</Text></Text>
-          <Text style={styles.arrow}> {'>'}</Text>
+          <Text style={styles.label}>Préssion Atm</Text>
         </View>
-      </TouchableOpacity>
+      </View>
 
-      <TouchableOpacity 
-        style={styles.item} 
-        onPress={() => navigation.navigate('Alimentation')}
-      >
-        <View style={styles.row}>
-          <Text style={styles.boldText}>Alimentation</Text>
-          <Text style={styles.arrow}> {'>'}</Text>
-        </View>
-      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Alimentation')}>
+  <Text style={styles.buttonText}>ALIMENTATION</Text>
+</TouchableOpacity>
 
-      <TouchableOpacity 
-        style={styles.item} 
-        onPress={() => navigation.navigate('Energie')}
-      >
-        <View style={styles.row}>
-          <Text style={styles.boldText}>Energie <Text style={styles.value}>99%</Text></Text>
-          <Text style={styles.arrow}> {'>'}</Text>
-        </View>
-      </TouchableOpacity>
 
-      <TouchableOpacity 
-        style={styles.item} 
-        onPress={() => navigation.navigate('PressionAtmospherique')}
-      >
-        <View style={styles.row}>
-          <Text style={styles.boldText}>Pression Atmosphérique <Text style={styles.value}>1013 hPa</Text></Text>
-          <Text style={styles.arrow}> {'>'}</Text>
-        </View>
-      </TouchableOpacity>
+      {/* État de l'aérateur */}
+      <View style={styles.aerator}>
+  <Text style={styles.aeratorLabel}>État aérateur</Text>
+  {/* Conteneur pour les cercles */}
+  <View style={styles.circleContainer}>
+    <View style={[styles.circle, { backgroundColor: "green" }]} />
+    <View style={[styles.circle, { backgroundColor: "red" }]} />
+  </View>
+</View>
 
-      <TouchableOpacity 
-        style={styles.item} 
-        onPress={() => navigation.navigate('TempératureAir')}
-      >
-        <View style={styles.row}>
-          <Text style={styles.boldText}>
-            Température de l'air
-          </Text>
-          <View style={styles.dataContainer}>
-            <Text style={styles.value}>
-              {temperature !== null ? `${temperature} °C` : <ActivityIndicator size="small" color="#00f" />}
-            </Text>
-          </View>
-        </View>
-        <Text style={styles.arrowNew}> {'>'}</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity 
-        style={styles.item} 
-        onPress={() => navigation.navigate('Humidité')}
-      >
-        <View style={styles.row}>
-          <Text style={styles.boldText}>
-            Humidité de l'air
-          </Text>
-          <View style={styles.dataContainer}>
-            <Text style={styles.value}>
-              {humidity !== null ? `${humidity} %` : <ActivityIndicator size="small" color="#00f" />}
-            </Text>
-          </View>
-        </View>
-        <Text style={styles.arrowNew}> {'>'}</Text>
-      </TouchableOpacity>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 15,
-    backgroundColor: '#1E3C50',
+    backgroundColor: '#002A37',
+    padding: 20,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  item: {
-    backgroundColor: '#2A6F9E',
-    paddingVertical: 15,
-    paddingHorizontal: 10,
-    marginVertical: 6,
-    borderRadius: 8,
-    flexDirection: 'row',
+  header: {
     alignItems: 'center',
+    marginBottom: 20,
   },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-  },
-  boldText: {
-    fontWeight: 'bold',
+  headerText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 33,
+    fontWeight: 'bold',
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+  },
+  parameter: {
+    alignItems: 'center',
+    margin: 10,
+    width: '40%',
+    padding: 10,
+    borderRadius: 10,
   },
   value: {
+    color: '#FFD700',
+    fontSize: 24,
     fontWeight: 'bold',
+  },
+  label: {
+    color: '#fff',
+    fontSize: 20,
+    textAlign: 'center',
+    marginTop: 5, // Espacement entre la barre et le texte
+  },
+  button: {
+    backgroundColor: '#007ACC',
+    padding: 15,
+    alignItems: 'center',
+    borderRadius: 50,
+    marginBottom: 20,
+    width: '70%', // Réduction de la largeur
+    alignSelf: 'center', // Centrage du bouton
+    // Ombre pour Android
+    elevation: 35,
+    
+  },
+  buttonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: 'bold',
   },
-  arrow: {
-    fontSize: 16,
-    color: '#fff',
+  aerator: {
+    alignItems: "center",
+    marginTop: 20,
   },
-  arrowNew: {
-    fontSize: 16,
-    color: '#fff',
-    marginLeft:"-15",
+  aeratorLabel: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
   },
-  dataContainer: {
-    marginLeft: 10,
-    marginRight:"40",
+  circleContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 10,
   },
-  spinner: {
-    marginLeft: 10,
+  circle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10, // Cela rend le carré circulaire
+    marginHorizontal: 10,
   },
 });
-
-export default DashboardScreen;

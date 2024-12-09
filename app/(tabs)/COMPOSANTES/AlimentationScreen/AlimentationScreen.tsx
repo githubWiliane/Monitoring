@@ -45,7 +45,7 @@ const AlimentationScreen = () => {
       />
 
       {/* Ajouter le bouton régulateur en haut à droite */}
-      <View style={styles.switchContainer}>
+      {/* <View style={styles.switchContainer}>
         <Text style={styles.regulatorLabel}>Distributeur</Text>
         <Switch
           trackColor={{ false: '#767577', true: '#81b0ff' }}
@@ -54,8 +54,8 @@ const AlimentationScreen = () => {
           value={isRegulatorOn}
         />
         <Text>{isRegulatorOn ? 'ON' : 'OFF'}</Text>
-      </View>
-
+      </View>  */}
+      
       <Text style={styles.label}>Nombre total :</Text>
       <TextInput
         style={styles.input}
@@ -156,13 +156,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#004d4d',
+    backgroundColor: '#002A37',
     padding: 20,
   },
   icon: {
     width: 160,
     height: 200,
-    marginBottom: 10,
+    marginBottom: 40,
   },
   switchContainer: {
     position: 'absolute',
