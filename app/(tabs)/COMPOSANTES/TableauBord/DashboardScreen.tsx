@@ -1,8 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Animated } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Animated, ActivityIndicator } from 'react-native';
 import CircularProgress from 'react-native-circular-progress-indicator';
+import axios from 'axios';
 
 export default function TableauDebord({ navigation }) {
+
+// LIAISON ESP32
+const [data, setData] = useState({ temperature: null, humidity: null, tempDS18B20: null });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Adresse IP locale de l'ESP32 en mode point d'accès
+  const ESP32_IP = "http://192.168.4.1"; // Adresse par défaut du point d'accès ESP32
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(`${ESP32_IP}`);
+      setData(response.data);
+      setLoading(false);
+    } catch (err) {
+      setError("Impossible de récupérer les données.");
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 100); // Met à jour les données toutes les 2 secondes
+    return () => clearInterval(interval); // Nettoie l'intervalle lors de la fermeture
+  }, []);
+ 
+
   const [tutorialStep, setTutorialStep] = useState(0); // Étape du tutoriel
   const [opacity] = useState(new Animated.Value(0)); // Animation de clignotement pour la flèche
   const [tutorialActive, setTutorialActive] = useState(true); // État du tutoriel actif ou non
@@ -21,11 +49,11 @@ export default function TableauDebord({ navigation }) {
 
   // Texte explicatif et positions pour chaque étape
   const tutorialData = [
-    { text: "Ceci est la température de l'eau", top: 100, left: 60 },
-    { text: "Ceci est la température de l'air", top: 100, left: 200 },
-    { text: "Ceci est l'humidité de l'air", top: 300, left: 60 },
+    { text: "Ceci est la température de l'eau", top: 100, left: 20 },
+    { text: "Ceci est la température de l'air", top: 100, left: 220 },
+    { text: "Ceci est l'humidité de l'air", top: 300, left: 20 },
     { text: "Ceci est la pression atmosphérique", top: 300, left: 200 },
-    { text: "Appuyez ici pour accéder à l'alimentation", top: 500, left: 100 },
+    { text: "Appuyez ici pour accéder à l'alimentation", top: 480, left: 80 },
   ];
 
   // Fonction pour passer à l'étape suivante
@@ -84,8 +112,9 @@ export default function TableauDebord({ navigation }) {
       {/* Paramètres */}
       <View style={styles.grid}>
         <View style={styles.parameter}>
+         
           <CircularProgress
-            value={50}
+            value= {data.tempDS18B20}
             radius={70}
             progressValueColor={'#fff'}
             duration={1000}
@@ -101,7 +130,7 @@ export default function TableauDebord({ navigation }) {
         </View>
         <View style={styles.parameter}>
           <CircularProgress
-            value={80}
+            value={data.temperature} 
             radius={70}
             progressValueColor={'#fff'}
             duration={1000}
@@ -117,7 +146,7 @@ export default function TableauDebord({ navigation }) {
         </View>
         <View style={styles.parameter}>
           <CircularProgress
-            value={60}
+            value={data.humidity}
             radius={70}
             progressValueColor={'#fff'}
             duration={1000}
@@ -294,5 +323,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+
+
+  data: {
+    fontSize: 18,
+    marginVertical: 10,
+  },
+  error: {
+    color: "red",
+    fontSize: 16,
   },
 });

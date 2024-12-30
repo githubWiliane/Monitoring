@@ -13,7 +13,7 @@ export default function App() {
         <Stack.Screen
           name="TableauDebord"
           component={TableauDebord}
-          options={{ title: 'Tableau de Bord' }}
+          options={{ title: '' }}
         />
         <Stack.Screen
           name="Alimentation"
