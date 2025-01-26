@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import SplashScreen from './COMPOSANTES/SplashScreen/SplashScreen';
+import SplashScreen from './COMPOSANTES/SplashScreen/Splash';
 import DashboardScreen from './COMPOSANTES/TableauBord/DashboardScreen';
 import TemperatureScreen from './COMPOSANTES/TemperatureScreen/TemperatureScreen';
 import AlimentationScreen from './COMPOSANTES/AlimentationScreen/AlimentationScreen';

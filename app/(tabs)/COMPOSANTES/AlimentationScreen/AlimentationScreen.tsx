@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-  Switch,
-  Animated,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-export default function AlimentationScreen({ navigation }) {
+export default function AlimentationScreen() {
   const [nombrePoissons, setNombrePoissons] = useState('');
   const [poidsTotal, setPoidsTotal] = useState('');
   const [resultat, setResultat] = useState('');
@@ -24,50 +22,12 @@ export default function AlimentationScreen({ navigation }) {
   const [showPicker2, setShowPicker2] = useState(false);
   const [showPicker3, setShowPicker3] = useState(false);
 
-  const [isRegulatorOn, setIsRegulatorOn] = useState(false);
-
-  const [tutorialStep, setTutorialStep] = useState(0);
-  const [opacity] = useState(new Animated.Value(0));
-  const [tutorialActive, setTutorialActive] = useState(true);
-
-  const tutorialData = [
-    { text: "Saisissez ici le nombre total de poissons", top: 250, left: 85 },
-    { text: "Saisissez ici le poids total des poissons", top: 335, left: 85 },
-    { text: "Appuyez ici pour calculer la ration", top: 400, left: 110 },
-    { text: "Veuillez programmer l'heure de distribution ici.", top: 510, left: 60 },
-    
-  ];
-
-  useEffect(() => {
-    if (tutorialActive) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(opacity, { toValue: 1, duration: 500, useNativeDriver: true }),
-          Animated.timing(opacity, { toValue: 0, duration: 500, useNativeDriver: true }),
-        ])
-      ).start();
-    }
-  }, [opacity, tutorialActive]);
-
-  const handleNextStep = () => {
-    if (tutorialStep < tutorialData.length - 1) {
-      setTutorialStep(tutorialStep + 1);
-    } else {
-      closeTutorial();
-    }
-  };
-
-  const closeTutorial = () => {
-    setTutorialActive(false);
-    setTutorialStep(0);
-  };
-
   const calculerAlimentation = () => {
     if (nombrePoissons && poidsTotal) {
       const quantiteAlimentation = (parseFloat(poidsTotal) / parseInt(nombrePoissons)) * 0.03;
       setResultat(`Quantité d'alimentation: ${quantiteAlimentation.toFixed(2)} kg`);
     } else {
-      setResultat('Veuillez  les deux valeurs');
+      setResultat('Veuillez saisir les deux valeurs.');
     }
   };
 
@@ -77,37 +37,8 @@ export default function AlimentationScreen({ navigation }) {
     return `${heures}:${minutes}`;
   };
 
-  const toggleSwitch = () => setIsRegulatorOn((previousState) => !previousState);
-
   return (
     <View style={styles.container}>
-      {tutorialActive && tutorialStep < tutorialData.length && (
-        <View style={styles.overlay}>
-          <View
-            style={[
-              styles.tooltip,
-              {
-                top: tutorialData[tutorialStep].top,
-                left: tutorialData[tutorialStep].left,
-              },
-            ]}
-          >
-            <Text style={styles.tooltipText}>{tutorialData[tutorialStep].text}</Text>
-            <Animated.View
-              style={[
-                styles.arrow,
-                { opacity, transform: [{ rotate: '45deg' }] },
-              ]}
-            />
-          </View>
-          <TouchableOpacity style={styles.nextButton} onPress={handleNextStep}>
-            <Text style={styles.nextButtonText}>
-              {tutorialStep < tutorialData.length - 1 ? 'Suivant' : 'Terminer'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
       <Image
         source={require('../AlimentationScreen/ALIMENTATION.png')}
         style={styles.icon}
@@ -175,31 +106,18 @@ export default function AlimentationScreen({ navigation }) {
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // Permet au conteneur d'occuper tout l'écran
-    justifyContent: 'center', // Centrer verticalement les éléments
-    alignItems: 'center', // Centrer horizontalement les éléments
-    backgroundColor: '#002A37', // Couleur d'arrière-plan
-    paddingBottom: 60, // Ajoute de l'espace en bas pour éviter que le contenu masque le bouton
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#002A37',
+    paddingBottom: 60,
   },
-  
   icon: {
     width: 160,
     height: 200,
     marginBottom: 40,
-  },
-  switchContainer: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  regulatorLabel: {
-    color: 'white',
-    marginRight: 10,
   },
   label: {
     fontSize: 18,
@@ -232,12 +150,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
   },
-  selectButton: {
-    backgroundColor: 'gray', // Couleur d'arrière-plan grise
-    paddingVertical: 6,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-  },
   buttonText: {
     color: 'white',
     fontSize: 16,
@@ -263,59 +175,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#f5dd4b',
   },
-  tooltip: {
-    position: 'absolute',
-    padding: 10,
-    backgroundColor: '#fff',
+  selectButton: {
+    backgroundColor: 'gray',
+    paddingVertical: 6,
+    paddingHorizontal: 15,
     borderRadius: 5,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
-  tooltipText: {
-    fontSize: 14,
-    color: '#000',
-    marginBottom: 5,
-    textAlign: 'center',
-  },
-  arrow: {
-    width: 20,
-    height: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 3,
-    borderBottomColor: '#007ACC', // Couleur de la flèche
-    borderRightWidth: 3,
-    borderRightColor: '#007ACC',
-    transform: [{ rotate: '45deg' }],
-    marginTop: 5,
-  },
-  nextButton: {
-    position: 'absolute', // Place le bouton par rapport au conteneur parent (ou à l'écran si aucun parent avec `relative`)
-    bottom: 50, // 20 pixels au-dessus du bas de l'écran
-    alignSelf: 'center', // Centre le bouton horizontalement
-    
-    backgroundColor: '#007ACC', // Couleur de fond
-    paddingVertical: 12, // Ajoute de l'espace vertical (pour rendre le bouton plus grand)
-    paddingHorizontal: 20, // Ajoute de l'espace horizontal
-    borderRadius: 8, // Arrondit les coins
-    zIndex: 1000, // Assure que le bouton est au-dessus des autres éléments
-  },
-  
-    // Effet de gris
-    overlay: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fond gris semi-transparent
-      zIndex: 998, // Position de l'overlay
-    },
-  
-  
-  nextButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-
 });
