@@ -1,99 +1,202 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Image, Switch, ScrollView, RefreshControl } from 'react-native';
 import CircularProgress from 'react-native-circular-progress-indicator';
 import axios from 'axios';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import Icon from 'react-native-vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function TableauDebord({ navigation }) {
-  // LIAISON ESP32
   const [data, setData] = useState({ temperature: null, humidity: null, tempDS18B20: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [connected, setConnected] = useState(false); // État de la connexion
-
+  const [connected, setConnected] = useState(false);
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
+  const [aeratorState, setAeratorState] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const ESP32_IP = "http://192.168.4.1";
 
   const fetchData = async () => {
     try {
       const response = await axios.get(`${ESP32_IP}`);
       setData(response.data);
+      setAeratorState(response.data.aeratorState);
       setLoading(false);
-      setConnected(true); // Si les données sont récupérées, l'ESP32 est connecté
+      setConnected(true);
     } catch (err) {
       setError("Impossible de récupérer les données.");
       setLoading(false);
-      setConnected(false); // En cas d'erreur, l'ESP32 est déconnecté
+      setConnected(false);
+    }
+  };
+
+  const toggleAerator = async () => {
+    try {
+      const newAeratorState = !aeratorState;
+      setAeratorState(newAeratorState);
+      await axios.post(`${ESP32_IP}/toggle-aerator`, { aeratorState: newAeratorState });
+    } catch (err) {
+      setError("Impossible de changer l'état de l'aérateur.");
+    }
+  };
+
+  const onRefresh = async () => {
+    if (!refreshing) {
+      setRefreshing(true);
+      await fetchData();
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
+    const loadTheme = async () => {
+      const savedTheme = await AsyncStorage.getItem('theme');
+      if (savedTheme !== null) {
+        setIsDarkTheme(JSON.parse(savedTheme));
+      }
+    };
+    loadTheme();
     fetchData();
     const interval = setInterval(fetchData, 1000);
     return () => clearInterval(interval);
   }, []);
 
+  const saveTheme = async (theme) => {
+    setIsDarkTheme(theme);
+    await AsyncStorage.setItem('theme', JSON.stringify(theme));
+  };
+
+  const themeStyles = isDarkTheme ? styles.dark : styles.light;
+  const progressColor = isDarkTheme ? '#fff' : '#000';
+  const iconColor = isDarkTheme ? '#fff' : '#000';
+  const separatorColor = isDarkTheme ? '#fff' : '#000';
+  const spinnerColor = isDarkTheme ? '#fff' : '#000';
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, themeStyles.container]}>
       {/* Tableau de bord */}
       <View style={styles.header}>
-        <Text style={styles.headerText}>TABLEAU DE BORD</Text>
+        <Text style={themeStyles.headerText}>TABLEAU DE BORD</Text>
       </View>
 
-      <View style={styles.grid}>
+      {/* ScrollView avec RefreshControl pour le rafraîchissement */}
+      <ScrollView
+        contentContainerStyle={styles.grid}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
         <View style={styles.parameter}>
-          <CircularProgress value={data.tempDS18B20} radius={70} progressValueColor="#fff" duration={1000} valueSuffix="°C" />
-          <Text style={styles.label}>T° de l'Eau</Text>
+          <CircularProgress 
+            value={data.tempDS18B20} 
+            radius={70} 
+            progressValueColor={progressColor} 
+            duration={1000} 
+            valueSuffix="°C" 
+            progressColor={progressColor} 
+          />
+          <Text style={themeStyles.label}>T° de l'Eau</Text>
         </View>
         <View style={styles.parameter}>
-          <CircularProgress value={data.temperature} radius={70} progressValueColor="#fff" duration={1000} valueSuffix="°C" />
-          <Text style={styles.label}>T° de l'Air</Text>
+          <CircularProgress 
+            value={data.temperature} 
+            radius={70} 
+            progressValueColor={progressColor} 
+            duration={1000} 
+            valueSuffix="°C" 
+            progressColor={progressColor} 
+          />
+          <Text style={themeStyles.label}>T° de l'Air</Text>
         </View>
         <View style={styles.parameter}>
-          <CircularProgress value={data.humidity} radius={70} progressValueColor="#fff" duration={1000} valueSuffix="%" />
-          <Text style={styles.label}>Humidité (Air)</Text>
+          <CircularProgress 
+            value={data.humidity} 
+            radius={70} 
+            progressValueColor={progressColor} 
+            duration={1000} 
+            valueSuffix="%" 
+            progressColor={progressColor} 
+          />
+          <Text style={themeStyles.label}>Humidité (Air)</Text>
         </View>
         <View style={styles.parameter}>
-          <CircularProgress value={30} radius={70} progressValueColor="#fff" duration={1000} valueSuffix="Atm" />
-          <Text style={styles.label}>Pression Atm</Text>
+          <CircularProgress 
+            value={30} 
+            radius={70} 
+            progressValueColor={progressColor} 
+            duration={1000} 
+            valueSuffix="Atm" 
+            progressColor={progressColor} 
+          />
+          <Text style={themeStyles.label}>Pression Atm</Text>
+        </View>
+      </ScrollView>
+
+      {/* Affichage de l'état de l'aérateur */}
+      <View style={styles.aeratorStatusContainer}>
+        <Text style={themeStyles.label}>État de l'Aérateur</Text>
+        <View style={styles.aeratorControl}>
+          <Image
+            source={aeratorState ? require('..//led/led2.png') : require('..//led/led1.png')}
+            style={styles.ledImage}
+          />
+          <Switch
+            value={aeratorState}
+            onValueChange={toggleAerator}
+            trackColor={{ false: '#767577', true: '#81b0ff' }}
+            thumbColor={aeratorState ? '#f5dd4b' : '#f4f3f4'}
+          />
         </View>
       </View>
 
-      {/* Barre blanche */}
-      <View style={styles.iconSeparator} />
+      {/* Barre séparatrice */}
+      <View style={[styles.iconSeparator, { backgroundColor: separatorColor }]} />
 
-      {/* Alignement des deux icônes */}
+      {/* Alignement des icônes */}
       <View style={styles.iconContainer}>
-        {/* Icône de Nourrissage des Poissons */}
         <TouchableOpacity onPress={() => navigation.navigate('Alimentation')}>
-          <Image source={require('../AlimentationScreen/ALIMENTATION.png')} style={styles.iconAlimentation} />
+          <Image 
+            source={require('../AlimentationScreen/ALIMENTATION.png')} 
+            style={[styles.iconAlimentation, { tintColor: iconColor }]}
+          />
         </TouchableOpacity>
 
-        {/* Icône Graphiques */}
         <TouchableOpacity onPress={() => navigation.navigate('Graphiques')}>
-          <Icon name="bar-chart" size={60} color="#fff" style={styles.iconGraphique} />
+          <Icon name="bar-chart" size={60} color={iconColor} style={styles.iconGraphique} />
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => navigation.navigate('Tutoriel')}>
+          <Icon name="book" size={60} color={iconColor} style={styles.iconTutoriel} />
         </TouchableOpacity>
       </View>
 
-      {/* Déplacement des messages en dessous de l'icône des graphiques */}
-      {loading && !connected && (
+      {/* Messages */}
+      {loading && !error && (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#fff" />
-          <Text style={styles.loadingText}>En attente des données...</Text>
+          <ActivityIndicator size="large" color={spinnerColor} style={styles.spinner} />
+          <Text style={themeStyles.loadingText}>En attente des données...</Text>
         </View>
       )}
 
-      {connected && !loading && (
-        <View style={styles.connectionContainer}>
-          <Text style={styles.connectionText}>Connexion rétablie !</Text>
-        </View>
-      )}
-
-      {/* Affichage du message d'erreur en cas de problème de connexion */}
       {error && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
+        <View style={styles.loadingContainer}>
+          <Text style={themeStyles.loadingText}>{error}</Text>
         </View>
       )}
+
+      {connected && !loading && !error && (
+        <View style={styles.connectionContainer}>
+          <Text style={themeStyles.connectionText}>Connexion rétablie !</Text>
+        </View>
+      )}
+
+      {/* Bouton pour changer le thème */}
+      <View style={styles.themeButtonContainer}>
+        <TouchableOpacity onPress={() => saveTheme(!isDarkTheme)}>
+          <Icon 
+            name={isDarkTheme ? 'sunny' : 'moon'} 
+            size={30} 
+            color={isDarkTheme ? '#fff' : '#000'} 
+          />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -101,7 +204,6 @@ export default function TableauDebord({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#002A37',
     padding: 20,
   },
   header: {
@@ -109,74 +211,134 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   headerText: {
-    color: '#fff',
-    fontSize: 33,
+    fontSize: 30,
     fontWeight: 'bold',
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-around',
-    marginBottom: 20,
+    marginBottom: 30,
   },
   parameter: {
     alignItems: 'center',
     margin: 10,
     width: '40%',
-    padding: 10,
+    padding: 0,
     borderRadius: 10,
   },
   label: {
-    color: '#fff',
     fontSize: 20,
     textAlign: 'center',
     marginTop: 5,
   },
   iconSeparator: {
-    height: 2, // Épaisseur de la barre
-    backgroundColor: '#fff', // Couleur blanche
-    marginHorizontal: 20, // Marges latérales
-    marginBottom: 20, // Espace entre la barre et les icônes
+    height: 1.5,
+    marginHorizontal: 20,
+    marginBottom: 2,
+    marginTop: 2,
   },
   iconContainer: {
-    flexDirection: 'row', // Aligner les icônes horizontalement
-    justifyContent: 'center', // Centrer les icônes
+    flexDirection: 'row',
+    justifyContent: 'space-around', // Répartit uniformément les icônes avec de l'espace
+    alignItems: 'center',           // Centre les icônes verticalement
     marginTop: 20,
   },
   iconGraphique: {
     marginLeft: 20,
+    right:8,
+  },
+  iconTutoriel: {
+    width: 70,
+    height: 70,
+    //resizeMode: 'contain',
+    top:10,
+    left:20,
   },
   iconAlimentation: {
-    width: 70, // Taille de l'image
-    height: 70, // Taille de l'image
-    resizeMode: 'contain', // Bien contenir l'image
-    marginRight: 70, // Espacement entre les icônes
+    width: 70, 
+    height: 70, 
+    resizeMode: 'contain', 
+    marginRight: 20, 
   },
   loadingContainer: {
     marginTop: 20,
     alignItems: 'center',
-    flexDirection: 'row', // Aligner le spinner et le texte horizontalement
-    justifyContent: 'center', // Centrer horizontalement
+    flexDirection: 'row', 
+    justifyContent: 'center', 
+  },
+  spinner: {
+    marginRight: 10, 
   },
   loadingText: {
-    color: '#fff',
     fontSize: 18,
-    marginLeft: 10, // Espace entre le spinner et le texte
+    marginLeft: 10, 
   },
   connectionContainer: {
     marginTop: 20,
     alignItems: 'center',
   },
   connectionText: {
-    color: '#00FF00', // Couleur verte
     fontSize: 18,
+    color: '#00FF00',
   },
-  errorContainer: {
-    marginTop: 20,
+  themeButtonContainer: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+  },
+  light: {
+    container: {
+      backgroundColor: '#fff',
+    },
+    headerText: {
+      fontSize: 30,
+      fontWeight: 'bold',
+    },
+    label: {
+      color: '#000',
+    },
+    loadingText: {
+      color: '#000',
+    },
+    connectionText: {
+      color: '#000',
+    },
+  },
+  dark: {
+    container: {
+      backgroundColor: '#121212',
+    },
+    headerText: {
+      color: '#fff',
+      fontSize: 30,
+      fontWeight: 'bold',
+    },
+    label: {
+      color: '#fff',
+    },
+    loadingText: {
+      color: '#fff',
+    },
+    connectionText: {
+      color: '#00FF00',
+    },
+  },
+  aeratorStatusContainer: {
     alignItems: 'center',
+    marginVertical: -3,
   },
-  errorText: {
-    color: '#FF0000', // Couleur rouge
-    fontSize: 18,
+  ledImage: {
+    width: 50,
+    height: 50,
+    resizeMode: 'contain',
+    marginRight: 0,
+  },
+  aeratorControl: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    width: '50%'
   },
 });

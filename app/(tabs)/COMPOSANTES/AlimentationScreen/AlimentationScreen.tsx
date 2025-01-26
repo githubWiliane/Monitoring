@@ -8,8 +8,9 @@ import {
   Image,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import Icon from 'react-native-vector-icons/Ionicons';
 
-export default function AlimentationScreen() {
+export default function AlimentationScreen({ navigation }) {
   const [nombrePoissons, setNombrePoissons] = useState('');
   const [poidsTotal, setPoidsTotal] = useState('');
   const [resultat, setResultat] = useState('');
@@ -21,6 +22,12 @@ export default function AlimentationScreen() {
   const [showPicker1, setShowPicker1] = useState(false);
   const [showPicker2, setShowPicker2] = useState(false);
   const [showPicker3, setShowPicker3] = useState(false);
+
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
+
+  const toggleTheme = () => {
+    setIsDarkTheme(!isDarkTheme);
+  };
 
   const calculerAlimentation = () => {
     if (nombrePoissons && poidsTotal) {
@@ -37,26 +44,36 @@ export default function AlimentationScreen() {
     return `${heures}:${minutes}`;
   };
 
+  const themeStyles = isDarkTheme ? styles.dark : styles.light;
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, themeStyles.container]}>
+      <TouchableOpacity style={styles.themeIconContainer} onPress={toggleTheme}>
+        <Icon
+          name={isDarkTheme ? 'sunny' : 'moon'}
+          size={30}
+          color={isDarkTheme ? '#fff' : '#000'}
+        />
+      </TouchableOpacity>
+
       <Image
         source={require('../AlimentationScreen/ALIMENTATION.png')}
-        style={styles.icon}
+        style={[styles.icon, { tintColor: isDarkTheme ? 'white' : 'black' }]}  
         resizeMode="contain"
       />
 
-      <Text style={styles.label}>Nombre total :</Text>
+      <Text style={themeStyles.label}>Nombre total :</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, themeStyles.input]}
         placeholder="Entrez nombre total des poissons"
         keyboardType="numeric"
         value={nombrePoissons}
         onChangeText={setNombrePoissons}
       />
 
-      <Text style={styles.label}>Poids total (kg) :</Text>
+      <Text style={themeStyles.label}>Poids total (kg) :</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, themeStyles.input]}
         placeholder="Entrez poids total de vos poissons"
         keyboardType="numeric"
         value={poidsTotal}
@@ -75,14 +92,14 @@ export default function AlimentationScreen() {
           { heure: heure3, setShow: setShowPicker3, show: showPicker3, setTime: setHeure3 }].map(
           ({ heure, setShow, show, setTime }, index) => (
             <View key={index} style={styles.timeRow}>
-              <Text style={styles.labelHeure}>{`Heure ${index + 1} :`}</Text>
+              <Text style={themeStyles.labelHeure}>{`Heure ${index + 1} :`}</Text>
               <TouchableOpacity
                 style={styles.selectButton}
                 onPress={() => setShow(true)}
               >
                 <Text style={styles.buttonText}>Sélectionner</Text>
               </TouchableOpacity>
-              <Text style={styles.selectedTime}>{formatHeure(heure)}</Text>
+              <Text style={themeStyles.selectedTime}>{formatHeure(heure)}</Text>
               {show && (
                 <DateTimePicker
                   value={heure}
@@ -101,84 +118,116 @@ export default function AlimentationScreen() {
         )}
       </View>
 
-      {resultat ? <Text style={styles.resultat}>{resultat}</Text> : null}
+      {resultat ? <Text style={themeStyles.resultat}>{resultat}</Text> : null}
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#002A37',
     paddingBottom: 60,
   },
+  themeIconContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
+  },
   icon: {
-    width: 160,
+    top:30,
+    width: 140,
     height: 200,
     marginBottom: 40,
   },
-  label: {
-    fontSize: 18,
-    color: 'white',
-    marginBottom: 6,
-  },
-  labelHeure: {
-    fontSize: 18,
-    color: 'white',
-    marginRight: 10,
-  },
   input: {
-    height: 40,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 5,
-    width: '80%',
-    marginBottom: 10,
-    paddingHorizontal: 10,
-    backgroundColor: '#fff',
-  },
-  buttonContainer: {
-    width: '80%',
-    marginTop: 10,
-    marginBottom: 10,
+    height: 50,
+    borderWidth: 2,
+    borderRadius: 25, // Arrondi plus prononcé
+    width: '85%', // Largeur des champs
+    paddingHorizontal: 15,
+    textAlignVertical: 'center',
+    marginBottom: 15, // Espace entre les champs
   },
   calculateButton: {
     backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 5,
+    paddingHorizontal: 15 ,
+    paddingRight:130,
+    paddingLeft:140,
+    paddingVertical:15,
+    borderRadius: 30,
     alignItems: 'center',
+    width: '85%', // Même largeur que les champs de saisie
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
   },
   timeContainer: {
-    alignItems: 'flex-start',
-    marginTop: 10,
-    width: '80%',
+    alignItems: 'center',
+    marginTop: 20,
+    width: '85%',
   },
   timeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  selectedTime: {
-    fontSize: 16,
-    color: 'white',
-    marginLeft: 5,
-  },
-  resultat: {
-    marginTop: 20,
-    fontSize: 18,
-    color: '#f5dd4b',
+    marginBottom: 15, // Espacement entre les lignes
   },
   selectButton: {
     backgroundColor: 'gray',
-    paddingVertical: 6,
-    paddingHorizontal: 15,
-    borderRadius: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20, // Bordures plus arrondies
+  },
+  light: {
+    container: {
+      backgroundColor: '#fff',
+    },
+    label: {
+      color: '#000',
+    },
+    labelHeure: {
+      color: '#000',
+      marginRight: 10,
+    },
+    selectedTime: {
+      color: '#000',
+      marginLeft: 20,
+    },
+    resultat: {
+      color: '#000',
+    },
+    input: {
+      backgroundColor: '#fff',
+      color: '#000',
+      borderColor: '#ccc',
+    },
+  },
+  dark: {
+    container: {
+      backgroundColor: '#121212',
+    },
+    label: {
+      color: '#fff',
+    },
+    labelHeure: {
+      color: '#fff',
+      marginRight: 10,
+    },
+    selectedTime: {
+      color: '#fff',
+      marginLeft: 20,
+    },
+    resultat: {
+      color: '#f5dd4b',
+    },
+    input: {
+      backgroundColor: '#333',
+      color: '#fff',
+      borderColor: '#fff',
+    },
   },
 });
+
