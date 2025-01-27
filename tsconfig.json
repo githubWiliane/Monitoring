@@ -13,5 +13,5 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-, "app/(tabs)/COMPOSANTES/SplashScreen/Splash.js"  ]
+, "app/(tabs)/COMPOSANTES/SplashScreen/SplashScreen.js"]
 }

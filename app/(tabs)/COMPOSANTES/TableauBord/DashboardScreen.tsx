@@ -5,6 +5,7 @@ import axios from 'axios';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
 export default function TableauDebord({ navigation }) {
   const [data, setData] = useState({ temperature: null, humidity: null, tempDS18B20: null });
   const [loading, setLoading] = useState(true);
@@ -162,9 +163,10 @@ export default function TableauDebord({ navigation }) {
           <Icon name="bar-chart" size={60} color={iconColor} style={styles.iconGraphique} />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate('Tutoriel')}>
-          <Icon name="book" size={60} color={iconColor} style={styles.iconTutoriel} />
+        <TouchableOpacity onPress={() => navigation.navigate('Tuto')}>
+    <Icon name="book" size={60} color={iconColor} style={styles.iconTutoriel} />
         </TouchableOpacity>
+
       </View>
 
       {/* Messages */}
